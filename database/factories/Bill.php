@@ -23,9 +23,7 @@ $factory->define(Bill::class, function (Faker $faker) use ($company) {
     $billed_at = $faker->dateTimeBetween(now()->startOfYear(), now()->endOfYear())->format('Y-m-d');
     $due_at = Date::parse($billed_at)->addDays(10)->format('Y-m-d');
 
-    $types = (string) setting('contact.type.vendor', 'vendor');
-
-    $contacts = Contact::type(explode(',', $types))->enabled()->get();
+    $contacts = Contact::vendor()->enabled()->get();
 
     if ($contacts->count()) {
         $contact = $contacts->random(1)->first();
@@ -173,7 +171,7 @@ $factory->afterCreating(Bill::class, function ($bill, $faker) use ($company) {
             ];
 
             if ($init_status == 'partial') {
-                $payment_request['amount'] = round($amount / 3, $bill->currency->precision);
+                $payment_request['amount'] = (int) round($amount / 3, $bill->currency->precision);
             }
 
             $transaction = dispatch_now(new CreateDocumentTransaction($updated_bill, $payment_request));

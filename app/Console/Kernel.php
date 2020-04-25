@@ -23,7 +23,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         // Not installed yet
-        if (!env('APP_INSTALLED')) {
+        if (!config('app.installed')) {
             return;
         }
 

@@ -20,7 +20,6 @@ use App\Models\Purchase\Bill;
 use App\Models\Setting\Category;
 use App\Models\Setting\Currency;
 use App\Models\Setting\Tax;
-use App\Traits\Contacts;
 use App\Traits\Currencies;
 use App\Traits\DateTime;
 use App\Traits\Purchases;
@@ -29,7 +28,7 @@ use App\Utilities\Modules;
 
 class Bills extends Controller
 {
-    use Contacts, Currencies, DateTime, Purchases, Uploads;
+    use Currencies, DateTime, Purchases, Uploads;
 
     /**
      * Display a listing of the resource.
@@ -40,7 +39,7 @@ class Bills extends Controller
     {
         $bills = Bill::with(['contact', 'items', 'histories', 'transactions'])->collect(['billed_at'=> 'desc']);
 
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $categories = Category::type('expense')->enabled()->orderBy('name')->pluck('name', 'id');
 
@@ -66,7 +65,7 @@ class Bills extends Controller
 
         $account_currency_code = Account::where('id', setting('default.account'))->pluck('currency_code')->first();
 
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $categories = Category::type('expense')->enabled()->orderBy('name')->pluck('name', 'id');
 
@@ -75,7 +74,7 @@ class Bills extends Controller
         $date_format = $this->getCompanyDateFormat();
 
         // Get Bill Totals
-        foreach ($bill->totals as $bill_total) {
+        foreach ($bill->totals_sorted as $bill_total) {
             $bill->{$bill_total->code} = $bill_total->amount;
         }
 
@@ -97,7 +96,7 @@ class Bills extends Controller
      */
     public function create()
     {
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $currencies = Currency::enabled()->orderBy('name')->pluck('name', 'code')->toArray();
 
@@ -193,7 +192,7 @@ class Bills extends Controller
      */
     public function edit(Bill $bill)
     {
-        $vendors = Contact::type($this->getVendorTypes())->enabled()->orderBy('name')->pluck('name', 'id');
+        $vendors = Contact::vendor()->enabled()->orderBy('name')->pluck('name', 'id');
 
         $currencies = Currency::enabled()->orderBy('name')->pluck('name', 'code')->toArray();
 
@@ -344,7 +343,7 @@ class Bills extends Controller
         $pdf = app('dompdf.wrapper');
         $pdf->loadHTML($html);
 
-        $file_name = 'bill_' . time() . '.pdf';
+        $file_name = $this->getBillFileName($bill);
 
         return $pdf->download($file_name);
     }

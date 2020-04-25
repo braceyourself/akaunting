@@ -10,6 +10,8 @@ use Config;
 use DB;
 use File;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Artisan;
+
 
 /**
  * Class Installer
@@ -117,7 +119,7 @@ class Installer
         }
 
         if (Console::run('help') !== true) {
-            $requirements[] = trans('install.requirements.executable');
+            $requirements[] = trans('install.requirements.executable', ['php_version' => AKAUNTING_PHP]);
         }
 
         return $requirements;
@@ -265,6 +267,8 @@ class Installer
             'FIREWALL_ENABLED'      =>  'true',
             'MODEL_CACHE_ENABLED'   =>  'true',
         ]);
+
+		Artisan::call('config:cache');
 
         // Rename the robots.txt file
         try {
